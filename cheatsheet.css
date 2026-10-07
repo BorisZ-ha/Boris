@@ -320,3 +320,109 @@ a.logo {
 .situation[hidden] {
     display: none !important;
 }
+
+.pdf-download {
+    display: inline-block;
+    margin: 0 auto 18px;
+    padding: 10px 18px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+@page {
+    size: A4;
+    margin: 12mm 12mm 14mm;
+}
+
+@media print {
+    body.cheatsheet-page {
+        background: #fff !important;
+        color: #1e293b !important;
+    }
+
+    .navbar,
+    .cheat-tools,
+    .toc,
+    .pdf-download,
+    .back-to-top,
+    footer {
+        display: none !important;
+    }
+
+    .cheat-hero {
+        background: #fff !important;
+        box-shadow: none !important;
+        padding: 0 0 8px !important;
+        color: #1e293b !important;
+    }
+
+    .cheat-hero h1 {
+        font-size: 28pt !important;
+        margin: 0 0 8px !important;
+        background: none !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        color: #1d4ed8 !important;
+    }
+
+    .cheat-hero p,
+    .section-lead,
+    .note,
+    .cheat-section h2,
+    .cheat-card h3,
+    .situation h3 {
+        color: #1e293b !important;
+    }
+
+    .cheat-hero p {
+        margin: 0 0 12px !important;
+        font-size: 12pt !important;
+    }
+
+    .handbook {
+        display: block !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .cheat-section h2 {
+        text-align: left !important;
+        font-size: 18pt !important;
+        text-shadow: none !important;
+        break-after: avoid;
+    }
+
+    .cheat-card,
+    .situation,
+    .when,
+    pre {
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+
+    .cheat-card,
+    .situation {
+        background: #fff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #1e293b !important;
+    }
+
+    .when {
+        background: #f0fdfa !important;
+        color: #1e293b !important;
+    }
+
+    .trio {
+        grid-template-columns: 1fr !important;
+    }
+
+    pre,
+    pre code {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
