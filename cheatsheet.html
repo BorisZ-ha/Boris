@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка: TypeScript, React, Python | Борис Зайгман</title>
+    <meta name="description"
+        content="Справочник по синтаксису TypeScript, React и Python: короткие примеры и пояснения, когда какой приём применять.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./cheatsheet.css">
+</head>
+
+<body id="top" class="cheatsheet-page">
+    <header class="navbar">
+        <nav aria-label="Основная навигация">
+            <a class="logo" href="./index.html">BORIS ZAYGMAN</a>
+            <ul class="nav-links">
+                <li><a href="./index.html">Home</a></li>
+                <li><a href="./index.html#about">Обо мне</a></li>
+                <li><a href="./index.html#projects">Проекты</a></li>
+                <li><a href="./cheatsheet.html" aria-current="page">Шпаргалка</a></li>
+                <li><a href="./index.html#contact">Контакты</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero cheat-hero">
+            <h1>Шпаргалка</h1>
+            <p>Синтаксис TypeScript, React и Python и правило, когда какой приём уместен. Примеры рассчитаны на TypeScript 5, React 18 и Python 3.10+.</p>
+            <div class="cheat-tools">
+                <label class="visually-hidden" for="search">Поиск по шпаргалке</label>
+                <input id="search" class="cheat-search" type="search" placeholder="Поиск: useEffect, union, dataclass, with…" autocomplete="off">
+                <div class="lang-tabs" role="toolbar" aria-label="Фильтр по языку">
+                    <button type="button" data-filter="all" aria-pressed="true">Все</button>
+                    <button type="button" data-filter="choose">Когда что</button>
+                    <button type="button" data-filter="ts">TypeScript</button>
+                    <button type="button" data-filter="react">React</button>
+                    <button type="button" data-filter="python">Python</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="handbook">
+            <nav class="toc" aria-label="Разделы шпаргалки">
+                <a href="#choose">Когда что</a>
+                <a href="#typescript">TypeScript</a>
+                <a href="#react">React</a>
+                <a href="#python">Python</a>
+            </nav>
+
+            <div>
+                <p id="empty" class="empty-state" role="status">Ничего не нашлось. Попробуйте другое слово: тип, эффект, список, файл.</p>
+
+                <section id="choose" class="cheat-section" data-section="choose">
+                    <h2>Когда что применять</h2>
+                    <p class="section-lead">Одна и та же задача выглядит по-разному в типе, в интерфейсе и в скрипте. Ниже — выбор приёма, а не полный синтаксис.</p>
+                    <div class="stack">
+                        <article class="situation" data-topic>
+                            <h3>Несколько взаимоисключающих состояний</h3>
+                            <p class="when"><strong>Когда:</strong> экран или операция бывает «ожидание», «загрузка», «успех» или «ошибка». Отдельные флаги <code>isLoading</code> и <code>error</code> легко оказываются истинными одновременно.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>TypeScript</h4>
+                                    <pre><code>type State&lt;T&gt; =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; data: T }
+  | { status: "error"; message: string };</code></pre>
+                                </div>
+                                <div>
+                                    <h4>React</h4>
+                                    <pre><code>const [state, setState] =
+  useState&lt;State&lt;User&gt;&gt;({ status: "idle" });
+
+switch (state.status) {
+  case "ok":
+    return &lt;p&gt;{state.data.name}&lt;/p&gt;;
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Python</h4>
+                                    <pre><code>class Status(Enum):
+    IDLE = "idle"
+    LOADING = "loading"
+    ERROR = "error"
+
+match status:
+    case Status.ERROR:
+        ...</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Входным данным нельзя верить</h3>
+                            <p class="when"><strong>Когда:</strong> значение пришло из JSON, формы, файла или аргумента командной строки. Внутри своей функции после проверки тип уже можно считать известным.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>TypeScript</h4>
+                                    <pre><code>function readName(input: unknown): string {
+  if (typeof input !== "string" || input === "") {
+    throw new Error("Имя обязательно");
+  }
+  return input;
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>React</h4>
+                                    <pre><code>{user ? (
+  &lt;Profile user={user} /&gt;
+) : (
+  &lt;p&gt;Нет данных&lt;/p&gt;
+)}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Python</h4>
+                                    <pre><code>try:
+    age = int(raw_age)
+except ValueError:
+    age = None</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Одна логика для разных типов</h3>
+                            <p class="when"><strong>Когда:</strong> функция не знает конкретный тип заранее, но должна вернуть тот же тип, что получила. Если тип всегда один, обобщение не нужно.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>TypeScript</h4>
+                                    <pre><code>function first&lt;T&gt;(items: T[]): T | undefined {
+  return items[0];
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>React</h4>
+                                    <pre><code>function useToggle(initial = false) {
+  const [on, setOn] = useState(initial);
+  const toggle = () =&gt; setOn((v) =&gt; !v);
+  return { on, toggle };
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Python</h4>
+                                    <pre><code>from typing import TypeVar
+
+T = TypeVar("T")
+
+def first(items: list[T]) -&gt; T | None:
+    return items[0] if items else None</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Два компонента смотрят на одни данные</h3>
+                            <p class="when"><strong>Когда:</strong> список и счётчик выбранных живут рядом — состояние поднимают к общему родителю. Тема или текущий пользователь нужны десятку далёких компонентов — тогда контекст. Поле поиска, которое меняется на каждую букву, в контекст класть не стоит: перерисуются все подписчики.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>Близкие соседи</h4>
+                                    <pre><code>function Page() {
+  const [id, setId] = useState&lt;string | null&gt;(null);
+  return (
+    &lt;&gt;
+      &lt;List onSelect={setId} /&gt;
+      &lt;Details id={id} /&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Далёкие компоненты</h4>
+                                    <pre><code>const UserContext = createContext&lt;User | null&gt;(null);
+
+function useUser() {
+  const user = useContext(UserContext);
+  if (!user) throw new Error("Нет провайдера");
+  return user;
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Не React</h4>
+                                    <pre><code># В Python и в чистом TypeScript
+# общие данные — аргумент функции
+# или поле объекта, а не глобальная
+# переменная.</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Ресурс нужно закрыть</h3>
+                            <p class="when"><strong>Когда:</strong> открыт файл, сокет, таймер или запрос. Закрытие должно случиться и при ошибке, и когда компонент исчез.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>React</h4>
+                                    <pre><code>useEffect(() =&gt; {
+  const id = setInterval(tick, 1000);
+  return () =&gt; clearInterval(id);
+}, []);</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Python</h4>
+                                    <pre><code>with open(path, encoding="utf-8") as file:
+    return file.read()</code></pre>
+                                </div>
+                                <div>
+                                    <h4>TypeScript</h4>
+                                    <pre><code>const timer = setTimeout(finish, 300);
+try {
+  await work();
+} finally {
+  clearTimeout(timer);
+}</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Преобразовать коллекцию</h3>
+                            <p class="when"><strong>Когда:</strong> из списка нужно получить другой список или словарь одной понятной операцией. Если шагов несколько и есть ранний выход, обычный цикл читается легче.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>TypeScript</h4>
+                                    <pre><code>const names = users
+  .filter((user) =&gt; user.active)
+  .map((user) =&gt; user.name);</code></pre>
+                                </div>
+                                <div>
+                                    <h4>React</h4>
+                                    <pre><code>const names = useMemo(
+  () =&gt; users.filter((u) =&gt; u.active).map((u) =&gt; u.name),
+  [users]
+);</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Python</h4>
+                                    <pre><code>names = [user.name for user in users if user.active]
+by_id = {user.id: user for user in users}</code></pre>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="typescript" class="cheat-section" data-section="ts">
+                    <h2>TypeScript</h2>
+                    <p class="section-lead">Типы описывают контракт на границе функции и модуля. Локальной переменной аннотация часто не нужна: компилятор выводит её сам.</p>
+                    <div class="stack">
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Базовые типы</h3>
+                                <span class="lang-tag">тип</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> аннотируйте параметры и возвращаемое значение публичной функции. Массив пишется как <code>string[]</code>, пара фиксированной длины — как кортеж.</p>
+                            <pre><code>let title: string = "Шпаргалка";
+let year: number = 2026;
+let published: boolean = true;
+let tags: string[] = ["react", "python"];
+let point: [number, number] = [10, 20];</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Функции и необязательный аргумент</h3>
+                                <span class="lang-tag">функция</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>?</code> означает «можно не передавать». Возвращаемый тип у экспортируемой функции лучше написать явно, чтобы смена реализации не молча поменяла контракт.</p>
+                            <pre><code>function greet(name: string, title?: string): string {
+  return title ? `${title} ${name}` : name;
+}
+
+const area = (width: number, height: number): number =&gt; width * height;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>interface и type</h3>
+                                <span class="lang-tag">контракт</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>interface</code> — форма объекта, которую можно расширять через <code>extends</code>. <code>type</code> — объединение, пересечение, примитив и всё, что не является одним объектом.</p>
+                            <pre><code>interface User {
+  id: string;
+  name: string;
+  email?: string;
+}
+
+type Id = string | number;
+type Admin = User &amp; { role: "admin" };</code></pre>
+                            <p class="note"><code>email?</code> — поле можно не указывать. Это не то же самое, что <code>email: string | null</code>: <code>null</code> надо передать явно.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Сужение union</h3>
+                                <span class="lang-tag">union</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> значение бывает одним из нескольких литералов. После <code>switch</code> или проверки <code>typeof</code> TypeScript оставляет только подходящую ветку.</p>
+                            <pre><code>type Status = "idle" | "loading" | "error";
+
+function label(status: Status): string {
+  switch (status) {
+    case "idle":
+      return "Ожидание";
+    case "loading":
+      return "Загрузка";
+    case "error":
+      return "Ошибка";
+  }
+}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>unknown вместо any</h3>
+                                <span class="lang-tag">граница</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> данные пришли снаружи. <code>unknown</code> заставляет проверить тип перед использованием. <code>any</code> выключает проверку — его оставляют только как временную метку в чужом коде, который ещё не описан.</p>
+                            <pre><code>function isUser(value: unknown): value is User {
+  return (
+    typeof value === "object" &amp;&amp;
+    value !== null &amp;&amp;
+    "id" in value &amp;&amp;
+    "name" in value
+  );
+}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Generics</h3>
+                                <span class="lang-tag">обобщение</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> алгоритм одинаковый, а тип элемента разный, и результат должен сохранить этот тип. Для одной конкретной структуры generic только шумит.</p>
+                            <pre><code>function first&lt;T&gt;(items: readonly T[]): T | undefined {
+  return items[0];
+}
+
+const id = first([{ id: "a" }, { id: "b" }])?.id;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Служебные типы</h3>
+                                <span class="lang-tag">Partial Pick Omit</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>Partial</code> — тело PATCH, где любое поле необязательно. <code>Pick</code> и <code>Omit</code> — урезанный вид для ответа API. <code>Record</code> — словарь с известным типом ключа и значения.</p>
+                            <pre><code>type UserUpdate = Partial&lt;User&gt;;
+type PublicUser = Pick&lt;User, "id" | "name"&gt;;
+type WithoutEmail = Omit&lt;User, "email"&gt;;
+type UsersById = Record&lt;string, User&gt;;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>as const и readonly</h3>
+                                <span class="lang-tag">литерал</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> список строк должен стать объединением литералов, а не просто <code>string[]</code>. <code>readonly</code> запрещает переприсваивание поля на этапе компиляции, в рантайме объект остаётся обычным.</p>
+                            <pre><code>const roles = ["admin", "editor", "user"] as const;
+type Role = (typeof roles)[number];
+
+interface Account {
+  readonly id: string;
+  role: Role;
+}</code></pre>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="react" class="cheat-section" data-section="react">
+                    <h2>React</h2>
+                    <p class="section-lead">Компонент — функция от props к разметке. Состояние хранит то, что меняется из-за действий пользователя. Всё, что можно вычислить из уже имеющихся данных, вычисляют во время рендера.</p>
+                    <div class="stack">
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Компонент, props и children</h3>
+                                <span class="lang-tag">JSX</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> данные приходят от родителя — это props. <code>children</code> — слот для вложенной разметки. Так собирают карточку или лейаут, не плодя флаги <code>showFooter</code>.</p>
+                            <pre><code>import type { ReactNode } from "react";
+
+type CardProps = {
+  title: string;
+  children: ReactNode;
+};
+
+function Card({ title, children }: CardProps) {
+  return (
+    &lt;section&gt;
+      &lt;h2&gt;{title}&lt;/h2&gt;
+      {children}
+    &lt;/section&gt;
+  );
+}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>useState</h3>
+                                <span class="lang-tag">состояние</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> значение живёт внутри компонента и меняется со временем: открыта панель, выбранный id, текст поля. Если новое значение зависит от старого, передавайте функцию — так не потеряется промежуточное обновление.</p>
+                            <pre><code>const [count, setCount] = useState(0);
+const [user, setUser] = useState&lt;User | null&gt;(null);
+
+setCount((prev) =&gt; prev + 1);</code></pre>
+                            <p class="note">Начальное значение <code>useState(getItems())</code> вызовет <code>getItems</code> на каждый рендер. Для дорогой инициализации передают функцию: <code>useState(() =&gt; getItems())</code>.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Условие и список</h3>
+                                <span class="lang-tag">key</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> ветка рендера зависит от данных — тернарный оператор или <code>&amp;&amp;</code>. В списке <code>key</code> — стабильный id записи. Индекс подходит только списку, который не сортируют, не фильтруют и не удаляют из середины.</p>
+                            <pre><code>{user ? &lt;Profile user={user} /&gt; : &lt;Login /&gt;}
+
+&lt;ul&gt;
+  {items.map((item) =&gt; (
+    &lt;li key={item.id}&gt;{item.name}&lt;/li&gt;
+  ))}
+&lt;/ul&gt;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Контролируемый ввод</h3>
+                                <span class="lang-tag">форма</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> значение нужно на каждый ввод: фильтр, валидация, счётчик символов. Если прочитать поле достаточно в момент отправки, хватит неконтролируемого поля и <code>FormData</code>.</p>
+                            <pre><code>const [query, setQuery] = useState("");
+
+&lt;input
+  value={query}
+  onChange={(event) =&gt; setQuery(event.target.value)}
+/&gt;
+
+function onSubmit(event: FormEvent&lt;HTMLFormElement&gt;) {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>useEffect</h3>
+                                <span class="lang-tag">эффект</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> компонент синхронизируется с внешним миром: сеть, подписка, таймер, документ. Функция, которую возвращает эффект, — очистка. Зависимость <code>[id]</code> значит «запустить снова, когда сменился id». Полное имя из имени и фамилии считают в теле компонента, без эффекта.</p>
+                            <pre><code>useEffect(() =&gt; {
+  const controller = new AbortController();
+
+  fetch(`/api/users/${id}`, { signal: controller.signal })
+    .then((response) =&gt; response.json())
+    .then(setUser);
+
+  return () =&gt; controller.abort();
+}, [id]);</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>useMemo и useCallback</h3>
+                                <span class="lang-tag">мемо</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> расчёт заметно дорогой или ссылку на функцию/массив нельзя менять на каждый рендер, потому что её ждёт <code>React.memo</code> или зависимость эффекта. Оборачивать каждый обработчик заранее не нужно.</p>
+                            <pre><code>const visible = useMemo(
+  () =&gt; items.filter((item) =&gt; item.name.includes(query)),
+  [items, query]
+);
+
+const onSelect = useCallback((nextId: string) =&gt; {
+  setSelectedId(nextId);
+}, []);</code></pre>
+                            <p class="note">Для короткого списка фильтр прямо в теле компонента проще. <code>useMemo</code> оставляют, когда расчёт дорогой или ссылку нельзя менять на каждый рендер.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Свой хук</h3>
+                                <span class="lang-tag">хук</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> одна и та же связка состояния и обработчиков нужна в нескольких компонентах. Если связка используется один раз, оставьте её в компоненте — отдельный хук не сделает код короче.</p>
+                            <pre><code>function useToggle(initial = false) {
+  const [on, setOn] = useState(initial);
+  const toggle = useCallback(() =&gt; {
+    setOn((value) =&gt; !value);
+  }, []);
+  return { on, toggle };
+}</code></pre>
+                            <p class="note">Имя хука начинается с <code>use</code>. Вызывают его только на верхнем уровне компонента, не внутри условия и не внутри цикла.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="python" class="cheat-section" data-section="python">
+                    <h2>Python</h2>
+                    <p class="section-lead">Аннотации помогают редактору и читателю, но в рантайме сами по себе ничего не проверяют. Проверку недоверенного ввода делают явно: <code>int()</code>, разбор JSON, своя функция.</p>
+                    <div class="stack">
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Переменные и аннотации</h3>
+                                <span class="lang-tag">тип</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> аннотируйте аргументы и результат функции, которую вызывают из другого модуля. В коротком скрипте локальные имена и так читаются.</p>
+                            <pre><code>name: str = "Борис"
+age: int = 28
+scores: list[int] = [10, 20, 30]
+user: dict[str, str] = {"name": name}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Функция и значение по умолчанию</h3>
+                                <span class="lang-tag">def</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> параметр можно опустить — дайте ему значение по умолчанию. Список и словарь в значении по умолчанию нельзя: объект создаётся один раз и делится между вызовами. Для «пустой коллекции» ставьте <code>None</code> и создавайте список внутри.</p>
+                            <pre><code>def greet(name: str, title: str | None = None) -&gt; str:
+    if title:
+        return f"{title} {name}"
+    return name
+
+def add_tag(tags: list[str] | None = None) -&gt; list[str]:
+    if tags is None:
+        tags = []
+    tags.append("new")
+    return tags</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>list, tuple, dict, set</h3>
+                                <span class="lang-tag">коллекция</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>list</code> — порядок и возможные повторы. <code>tuple</code> — короткая неизменяемая запись, её можно положить в множество. <code>dict</code> — поиск по ключу. <code>set</code> — уникальные элементы и проверка «есть ли».</p>
+                            <pre><code>names = ["Анна", "Борис", "Анна"]
+unique = set(names)
+person = ("Борис", 28)
+user = {"name": "Борис"}
+
+email = user.get("email", "—")  # ключа может не быть
+name = user["name"]              # ключ обязан быть</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Генераторы коллекций</h3>
+                                <span class="lang-tag">comprehension</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> одно преобразование или фильтр. Цикл <code>for</code> — если внутри несколько шагов, запись в несколько мест или выход по <code>break</code>.</p>
+                            <pre><code>names = [user.name for user in users if user.active]
+by_id = {user.id: user for user in users}
+adult_ids = {user.id for user in users if user.age &gt;= 18}</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>enumerate и zip</h3>
+                                <span class="lang-tag">обход</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>enumerate</code> — нужен номер элемента. <code>zip</code> — две последовательности идут парой. <code>strict=True</code> поднимет ошибку, если длины различаются, вместо тихого обрезания.</p>
+                            <pre><code>for index, name in enumerate(names, start=1):
+    print(index, name)
+
+for name, score in zip(names, scores, strict=True):
+    print(f"{name}: {score}")</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>dataclass</h3>
+                                <span class="lang-tag">класс</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> объект в первую очередь хранит поля. Обычный класс — когда есть инвариант, который нельзя нарушить присваиванием, и методы, которые этот инвариант держат. <code>frozen=True</code> запрещает менять поля после создания.</p>
+                            <pre><code>from dataclasses import dataclass
+
+@dataclass
+class User:
+    id: str
+    name: str
+    email: str | None = None</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>match</h3>
+                                <span class="lang-tag">состояние</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> у разных состояний разный набор полей, как у union в TypeScript. <code>Enum</code> достаточно, если состояний несколько, а дополнительных данных нет.</p>
+                            <pre><code>from enum import Enum
+
+class Status(Enum):
+    IDLE = "idle"
+    LOADING = "loading"
+    ERROR = "error"
+
+def label(status: Status) -&gt; str:
+    match status:
+        case Status.IDLE:
+            return "Ожидание"
+        case Status.LOADING:
+            return "Загрузка"
+        case Status.ERROR:
+            return "Ошибка"</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Файлы и with</h3>
+                                <span class="lang-tag">ресурс</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> ресурс обязан закрыться, даже если внутри случилась ошибка. <code>Path.read_text</code> удобен для небольшого файла целиком. Построчное чтение большого файла оставляют в <code>with</code>.</p>
+                            <pre><code>from pathlib import Path
+
+text = Path("notes.txt").read_text(encoding="utf-8")
+
+with open("notes.txt", encoding="utf-8") as file:
+    for line in file:
+        print(line.rstrip())</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Исключения</h3>
+                                <span class="lang-tag">ошибка</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> вы можете исправить конкретный сбой и продолжить. Ловите именно этот класс, например <code>ValueError</code> или <code>FileNotFoundError</code>. Голый <code>except:</code> прячет и опечатки, и прерывание программы.</p>
+                            <pre><code>try:
+    value = int(raw)
+except ValueError:
+    value = 0</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>*args, **kwargs и точка входа</h3>
+                                <span class="lang-tag">api</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> вы оборачиваете чужую функцию и должны пропустить её аргументы дальше. В собственном API лучше именованные параметры: по ним видно контракт. Блок <code>main</code> не выполняется, когда файл импортируют как модуль.</p>
+                            <pre><code>def log(message: str, *args: object, **fields: object) -&gt; None:
+    print(message, *args, fields)
+
+def main() -&gt; None:
+    log("старт", user="Борис")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Борис Зайгман. Все права защищены.</p>
+        <a href="#top" class="back-to-top" aria-label="Вернуться в начало">↑</a>
+    </footer>
+
+    <style>
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+    <script>
+        const buttons = document.querySelectorAll("[data-filter]");
+        const sections = document.querySelectorAll("[data-section]");
+        const search = document.querySelector("#search");
+        const empty = document.querySelector("#empty");
+        let current = "all";
+
+        function applyFilter() {
+            const query = search.value.trim().toLowerCase();
+            let visibleCards = 0;
+
+            sections.forEach((section) => {
+                const matchesTab = current === "all" || current === section.dataset.section;
+                let sectionHasCard = false;
+
+                section.querySelectorAll("[data-topic]").forEach((card) => {
+                    const matchesQuery = query === "" || card.textContent.toLowerCase().includes(query);
+                    const show = matchesTab && matchesQuery;
+                    card.hidden = !show;
+                    if (show) {
+                        sectionHasCard = true;
+                        visibleCards += 1;
+                    }
+                });
+
+                section.hidden = !sectionHasCard;
+            });
+
+            empty.classList.toggle("visible", visibleCards === 0);
+        }
+
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => {
+                current = button.dataset.filter;
+                buttons.forEach((item) => {
+                    item.setAttribute("aria-pressed", String(item === button));
+                });
+                applyFilter();
+            });
+        });
+
+        search.addEventListener("input", applyFilter);
+    </script>
+</body>
+
+</html>
