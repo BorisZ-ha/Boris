@@ -1,0 +1,41 @@
+a.logo {
+    text-decoration: none;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+}
+
+.catalog-grid .content h3 {
+    margin-top: 0;
+}
+
+.catalog-grid .project-card {
+    background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+    .catalog-grid .project-card {
+        background: var(--card-bg-dark);
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        justify-content: flex-end;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .nav-links a:hover {
+        font-size: inherit;
+    }
+}
