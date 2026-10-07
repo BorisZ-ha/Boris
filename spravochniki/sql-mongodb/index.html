@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка: SQL и MongoDB | Справочники</title>
+    <meta name="description"
+        content="Справочник по SQL и MongoDB: выборка, связи, изменения, индексы и когда что применять.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/cheatsheet.css">
+</head>
+
+<body id="top" class="cheatsheet-page">
+    <header class="navbar">
+        <nav aria-label="Основная навигация">
+            <a class="logo" href="../index.html">СПРАВОЧНИКИ</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Все</a></li>
+                <li><a href="../typescript-react-python/index.html">TypeScript, React, Python</a></li>
+                <li><a href="./index.html" aria-current="page">SQL и MongoDB</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero cheat-hero">
+            <h1>SQL и MongoDB</h1>
+            <p>Синтаксис выборки, связей и изменений и правило, когда хватает таблицы, а когда документа. SQL близок к PostgreSQL. Примеры MongoDB — mongosh, те же методы, что у драйвера Node.js.</p>
+            <a class="pdf-download" href="./cheatsheet.pdf" download>Скачать PDF</a>
+            <div class="cheat-tools">
+                <label class="visually-hidden" for="search">Поиск по шпаргалке</label>
+                <input id="search" class="cheat-search" type="search" placeholder="Поиск: JOIN, индекс, aggregate, $set…" autocomplete="off">
+                <div class="lang-tabs" role="toolbar" aria-label="Фильтр по языку">
+                    <button type="button" data-filter="all" aria-pressed="true">Все</button>
+                    <button type="button" data-filter="choose">Когда что</button>
+                    <button type="button" data-filter="sql">SQL</button>
+                    <button type="button" data-filter="mongo">MongoDB</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="handbook">
+            <nav class="toc" aria-label="Разделы шпаргалки">
+                <a href="#choose">Когда что</a>
+                <a href="#sql">SQL</a>
+                <a href="#mongo">MongoDB</a>
+            </nav>
+
+            <div>
+                <p id="empty" class="empty-state" role="status">Ничего не нашлось. Попробуйте другое слово: join, индекс, update, документ.</p>
+
+                <section id="choose" class="cheat-section" data-section="choose">
+                    <h2>Когда что применять</h2>
+                    <p class="section-lead">SQL хранит строки в таблицах и умеет собирать их запросом. MongoDB хранит документы и удобен, когда вы читаете одну сущность целиком. Ниже — выбор модели, а не полный синтаксис.</p>
+                    <div class="stack">
+                        <article class="situation" data-topic>
+                            <h3>Данные, которые читают вместе</h3>
+                            <p class="when"><strong>Когда:</strong> заказ всегда показывают вместе с двумя-тремя позициями — в MongoDB это один документ. Автор и сотни книг, пользователи и роли, отчёты по разным таблицам — в SQL это отдельные таблицы и связь по ключу. Вкладывать в документ то, что живёт своей жизнью и разрастается без предела, не стоит.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL</h4>
+                                    <pre><code>SELECT books.title, authors.name
+FROM books
+JOIN authors ON authors.id = books.author_id;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>MongoDB, внутри документа</h4>
+                                    <pre><code>db.posts.insertOne({
+  title: "Заметка",
+  comments: [
+    { author: "Анна", text: "Полезно" }
+  ]
+})</code></pre>
+                                </div>
+                                <div>
+                                    <h4>MongoDB, ссылка</h4>
+                                    <pre><code>db.comments.insertOne({
+  postId: postId,
+  author: "Анна",
+  text: "Полезно"
+})</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>База должна отклонить плохую запись</h3>
+                            <p class="when"><strong>Когда:</strong> у пользователя обязан быть уникальный email, а у книги — существующий автор. В SQL это <code>NOT NULL</code>, <code>UNIQUE</code> и внешний ключ. В MongoDB уникальность даёт уникальный индекс, обязательные поля — <code>$jsonSchema</code>. Связи «эта книга указывает на реального автора» MongoDB сам не проверит.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL</h4>
+                                    <pre><code>CREATE TABLE books (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  title text NOT NULL,
+  author_id bigint NOT NULL REFERENCES authors (id)
+);</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Уникальный email</h4>
+                                    <pre><code>db.users.createIndex(
+  { email: 1 },
+  { unique: true }
+)</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Обязательные поля</h4>
+                                    <pre><code>db.createCollection("users", {
+  validator: {
+    $jsonSchema: {
+      required: ["email", "name"]
+    }
+  }
+})</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Посчитать по группам</h3>
+                            <p class="when"><strong>Когда:</strong> нужен отчёт: сколько книг у автора, какая сумма оплаченных заказов. В SQL это <code>GROUP BY</code>. В MongoDB — конвейер <code>aggregate</code>. Фильтр строк ставьте до группировки: <code>WHERE</code> и <code>$match</code> отсекают лишнее раньше.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL</h4>
+                                    <pre><code>SELECT author_id, COUNT(*) AS book_count
+FROM books
+GROUP BY author_id
+HAVING COUNT(*) &gt;= 2;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>MongoDB</h4>
+                                    <pre><code>db.orders.aggregate([
+  { $match: { status: "paid" } },
+  { $group: {
+      _id: "$userId",
+      total: { $sum: "$amount" }
+  } },
+  { $sort: { total: -1 } }
+])</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Не путать</h4>
+                                    <pre><code>-- WHERE отбирает строки
+-- HAVING отбирает уже посчитанные группы
+
+// $match до $group дешевле,
+// чем группировать всё и фильтровать после</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Поменять или удалить записи</h3>
+                            <p class="when"><strong>Когда:</strong> меняется одно поле — <code>UPDATE ... SET</code> и <code>updateOne</code> с <code>$set</code>. Условие обязательно. <code>UPDATE</code> и <code>DELETE</code> без <code>WHERE</code>, как и <code>deleteMany({})</code>, задевают всю таблицу или коллекцию.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL</h4>
+                                    <pre><code>UPDATE users
+SET name = 'Борис'
+WHERE id = 1;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>MongoDB</h4>
+                                    <pre><code>db.users.updateOne(
+  { email: "boris@example.com" },
+  { $set: { name: "Борис" } }
+)</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Удаление</h4>
+                                    <pre><code>DELETE FROM users WHERE id = 1;
+
+db.users.deleteOne({ email: "boris@example.com" })</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Несколько записей должны измениться вместе</h3>
+                            <p class="when"><strong>Когда:</strong> списание и зачисление — одна операция: либо оба изменения, либо ни одного. В SQL это транзакция. В MongoDB, если оба поля живут в одном документе, хватает одного <code>updateOne</code>. Транзакция на несколько документов нужна, только когда их нельзя честно сложить в один документ.</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL</h4>
+                                    <pre><code>BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Один документ</h4>
+                                    <pre><code>db.accounts.updateOne(
+  { _id: id, balance: { $gte: 100 } },
+  { $inc: { balance: -100 } }
+)</code></pre>
+                                </div>
+                                <div>
+                                    <h4>Несколько документов</h4>
+                                    <pre><code>session.startTransaction()
+orders.updateOne(
+  { _id: id },
+  { $set: { status: "paid" } },
+  { session }
+)
+session.commitTransaction()</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="situation" data-topic>
+                            <h3>Дальняя страница длинного списка</h3>
+                            <p class="when"><strong>Когда:</strong> первая страница короткая — хватает <code>LIMIT</code> и <code>limit</code>. <code>OFFSET</code> и <code>skip</code> на десятой тысяче заставляют базу прочитать и выбросить все предыдущие строки. Для глубокой листалки берите «после такого-то id».</p>
+                            <div class="trio">
+                                <div>
+                                    <h4>SQL, первая страница</h4>
+                                    <pre><code>SELECT id, title
+FROM books
+ORDER BY id
+LIMIT 20;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>SQL, следующая</h4>
+                                    <pre><code>SELECT id, title
+FROM books
+WHERE id &gt; 100
+ORDER BY id
+LIMIT 20;</code></pre>
+                                </div>
+                                <div>
+                                    <h4>MongoDB</h4>
+                                    <pre><code>db.books.find({ _id: { $gt: lastId } })
+  .sort({ _id: 1 })
+  .limit(20)</code></pre>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="sql" class="cheat-section" data-section="sql">
+                    <h2>SQL</h2>
+                    <p class="section-lead">Запрос говорит, какие строки нужны, а не как их обходить циклом. Имена таблиц ниже — <code>authors</code>, <code>books</code>, <code>users</code>, <code>accounts</code>.</p>
+                    <div class="stack">
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>SELECT и WHERE</h3>
+                                <span class="lang-tag">выборка</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> перечисляйте нужные столбцы. <code>SELECT *</code> удобен в консоли, в коде приложения он тащит лишние поля и ломается, если в таблице появился тяжёлый столбец. <code>WHERE</code> отбирает строки до группировки.</p>
+                            <pre><code>SELECT title, year
+FROM books
+WHERE year BETWEEN 2020 AND 2026
+  AND status IN ('draft', 'published')
+ORDER BY year DESC;</code></pre>
+                            <p class="note"><code>LIKE 'SQL%'</code> ищет строки с таким началом и может использовать индекс. <code>LIKE '%SQL'</code> — нет: процент в начале заставляет смотреть все строки.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>NULL</h3>
+                                <span class="lang-tag">пусто</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> значения нет. <code>NULL</code> не равен ничему, в том числе другому <code>NULL</code>. Сравнение <code>= NULL</code> не находит строки. Нужны <code>IS NULL</code> и <code>IS NOT NULL</code>.</p>
+                            <pre><code>SELECT id, email
+FROM users
+WHERE email IS NULL;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>JOIN</h3>
+                                <span class="lang-tag">связь</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> <code>JOIN</code> (он же <code>INNER JOIN</code>) оставляет только строки, у которых нашлась пара. <code>LEFT JOIN</code> оставляет все строки слева, даже если справа пары нет: недостающие столбцы будут <code>NULL</code>. Берите <code>LEFT JOIN</code>, когда отсутствие связи — нормальный ответ, а не повод выбросить книгу из списка.</p>
+                            <pre><code>SELECT books.title, authors.name
+FROM books
+LEFT JOIN authors ON authors.id = books.author_id
+WHERE books.year &gt;= 2020
+ORDER BY books.title;</code></pre>
+                            <p class="note">Если нужны только столбцы одной таблицы, а вторая лишь проверяет условие, подойдёт и <code>WHERE author_id IN (SELECT id FROM authors WHERE country = 'IL')</code>. Как только из второй таблицы нужны свои столбцы, <code>JOIN</code> читается прямее.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>GROUP BY и HAVING</h3>
+                                <span class="lang-tag">отчёт</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> одна строка ответа — это группа, а не исходная запись. В списке <code>SELECT</code> рядом с агрегатом только столбцы из <code>GROUP BY</code>. <code>WHERE</code> отбрасывает строки заранее, <code>HAVING</code> отбрасывает уже посчитанные группы.</p>
+                            <pre><code>SELECT author_id, COUNT(*) AS book_count
+FROM books
+WHERE year &gt;= 2020
+GROUP BY author_id
+HAVING COUNT(*) &gt;= 2
+ORDER BY book_count DESC;</code></pre>
+                            <p class="note"><code>COUNT(*)</code> считает строки. <code>COUNT(email)</code> считает непустые email. <code>COUNT(DISTINCT country)</code> считает разные значения, а не просто включает <code>DISTINCT</code> в список.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>INSERT</h3>
+                                <span class="lang-tag">запись</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> появляется новая строка. Столбцы перечисляйте явно, чтобы порядок значений не зависел от порядка колонок в таблице.</p>
+                            <pre><code>INSERT INTO users (email, name)
+VALUES ('boris@example.com', 'Борис');</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>UPDATE и DELETE</h3>
+                                <span class="lang-tag">изменение</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> меняется или исчезает уже существующая строка. Сначала напишите <code>SELECT</code> с тем же <code>WHERE</code> и посмотрите, сколько строк он находит. Без <code>WHERE</code> команда применяется ко всей таблице.</p>
+                            <pre><code>UPDATE books
+SET title = 'Новое название', year = 2026
+WHERE id = 15;
+
+DELETE FROM books
+WHERE id = 15;</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Таблица, ключ и связь</h3>
+                                <span class="lang-tag">схема</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> появляется новый вид сущностей. Первичный ключ однозначно называет строку. Внешний ключ не даёт вставить книгу с автором, которого нет, и удерживает от удаления автора, на которого ещё есть книги.</p>
+                            <pre><code>CREATE TABLE authors (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name text NOT NULL
+);
+
+CREATE TABLE books (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  title text NOT NULL,
+  author_id bigint NOT NULL REFERENCES authors (id)
+);</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Индекс</h3>
+                                <span class="lang-tag">поиск</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> по столбцу часто фильтруют, соединяют таблицы или сортируют. Первичный ключ и <code>UNIQUE</code> уже создают индекс. Индекс на каждый столбец замедляет <code>INSERT</code> и <code>UPDATE</code>: каждое изменение надо записать и в индекс.</p>
+                            <pre><code>CREATE UNIQUE INDEX users_email_idx ON users (email);
+
+CREATE INDEX books_author_id_idx ON books (author_id);</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Транзакция</h3>
+                                <span class="lang-tag">атомарность</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> несколько команд обязаны выполниться вместе. <code>COMMIT</code> сохраняет их. <code>ROLLBACK</code> отменяет всё с <code>BEGIN</code>, если вторая команда не удалась. Для одного <code>UPDATE</code> отдельная транзакция в прикладном коде обычно не нужна: одна команда и так атомарна.</p>
+                            <pre><code>BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;</code></pre>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="mongo" class="cheat-section" data-section="mongo">
+                    <h2>MongoDB</h2>
+                    <p class="section-lead">Документ — это объект, коллекция — набор таких объектов. Поле <code>_id</code> база ставит сама, если его не передать. Примеры ниже рассчитаны на базу, в которой уже выполнено <code>use shop</code>.</p>
+                    <div class="stack">
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>insertOne и insertMany</h3>
+                                <span class="lang-tag">запись</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> появляется один документ или пачка независимых. Поля у документов в одной коллекции могут различаться. Это удобно для черновика и опасно для данных, по которым вы потом строите отчёт: отсутствующее поле легко забыть в запросе.</p>
+                            <pre><code>db.books.insertOne({
+  title: "SQL",
+  year: 2024,
+  tags: ["sql"]
+})
+
+db.books.insertMany([
+  { title: "MongoDB", year: 2025 },
+  { title: "Индексы", year: 2026, tags: ["sql"] }
+])</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>find, фильтр и проекция</h3>
+                                <span class="lang-tag">выборка</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> первый аргумент — какие документы нужны, второй — какие поля вернуть. <code>1</code> оставляет поле, <code>0</code> убирает. <code>_id</code> возвращается сам, пока его явно не выключить. Пустой фильтр <code>{}</code> — это вся коллекция.</p>
+                            <pre><code>db.books.find(
+  { year: { $gte: 2020 }, tags: "sql" },
+  { title: 1, year: 1, _id: 0 }
+)</code></pre>
+                            <p class="note"><code>tags: "sql"</code> находит документ, в массиве <code>tags</code> которого есть <code>"sql"</code>. Отдельный оператор для «элемент массива» здесь не нужен.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Сравнения и отсутствующее поле</h3>
+                                <span class="lang-tag">фильтр</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> условие сложнее равенства. Нет поля и поле равно <code>null</code> — разные ситуации. <code>$exists: false</code> ловит документы, где ключа нет вовсе.</p>
+                            <pre><code>db.books.find({
+  status: { $in: ["draft", "published"] },
+  year: { $gte: 2020, $lt: 2027 }
+})
+
+db.users.find({ email: { $exists: false } })</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>updateOne и $set</h3>
+                                <span class="lang-tag">изменение</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> нужно поменять несколько полей, не затерев остальные. <code>$set</code> пишет только перечисленные ключи. <code>replaceOne</code> подменяет документ целиком. <code>updateMany</code> — когда условие должно задеть все подходящие документы, а не первый.</p>
+                            <pre><code>db.books.updateOne(
+  { _id: id },
+  { $set: { title: "Новое название", year: 2026 } }
+)
+
+db.books.replaceOne(
+  { _id: id },
+  { title: "Только эти поля", year: 2026 }
+)</code></pre>
+                            <p class="note"><code>$inc</code> увеличивает число. Условие <code>{ balance: { $gte: 100 } }</code> в том же фильтре не даёт уйти в минус, если параллельный запрос уже списал деньги.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>deleteOne и deleteMany</h3>
+                                <span class="lang-tag">удаление</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> документ больше не нужен. <code>deleteOne</code> снимает первый подходящий. <code>deleteMany</code> требует осознанный фильтр. Пустой объект удалит все документы коллекции, саму коллекцию при этом не уничтожив.</p>
+                            <pre><code>db.books.deleteOne({ _id: id })
+
+db.books.deleteMany({ status: "draft" })</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Вложение и ссылка</h3>
+                                <span class="lang-tag">модель</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> комментариев мало и их всегда показывают вместе с заметкой — держите массив внутри документа. Комментариев много, их листают отдельно или один и тот же автор нужен в разных местах — храните отдельную коллекцию и поле <code>postId</code>. Документ в MongoDB ограничен 16 МБ, массив «всё внутри» упирается в этот потолок.</p>
+                            <pre><code>db.posts.insertOne({
+  title: "Заметка",
+  comments: [{ author: "Анна", text: "Полезно" }]
+})
+
+db.comments.insertOne({
+  postId: postId,
+  author: "Анна",
+  text: "Полезно"
+})</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>aggregate</h3>
+                                <span class="lang-tag">конвейер</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> простого <code>find</code> мало: нужна группировка или сборка из другой коллекции. Стадии идут по порядку. <code>$lookup</code> похож на левое соединение, но тяжелее обычного <code>find</code> по вложенным полям. Если автор нужен при каждом чтении книги, имя автора проще хранить в самой книге.</p>
+                            <pre><code>db.orders.aggregate([
+  { $match: { status: "paid" } },
+  { $group: { _id: "$userId", total: { $sum: "$amount" } } },
+  { $sort: { total: -1 } }
+])
+
+db.books.aggregate([
+  { $match: { year: { $gte: 2020 } } },
+  { $lookup: {
+      from: "authors",
+      localField: "authorId",
+      foreignField: "_id",
+      as: "author"
+  } }
+])</code></pre>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Индекс</h3>
+                                <span class="lang-tag">поиск</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> по полю ищут, сортируют или требуют уникальность. <code>_id</code> уже проиндексирован. Уникальный индекс не заставляет поле быть в каждом документе: два документа без <code>email</code> для простого уникального индекса допустимы. Обязательность поля задают валидатором, а не индексом.</p>
+                            <pre><code>db.users.createIndex({ email: 1 }, { unique: true })
+
+db.books.createIndex({ authorId: 1, year: -1 })</code></pre>
+                            <p class="note">Порядок полей в составном индексе важен. Индекс <code>{ authorId: 1, year: -1 }</code> помогает запросу по автору и запросу по автору с сортировкой по году. Запросу «только по году» он не замена отдельного индекса по <code>year</code>.</p>
+                        </article>
+
+                        <article class="cheat-card" data-topic>
+                            <div class="card-head">
+                                <h3>Сортировка и предел</h3>
+                                <span class="lang-tag">страница</span>
+                            </div>
+                            <p class="when"><strong>Когда:</strong> нужен порядок и не вся коллекция. <code>sort</code> без индекса на большой коллекции дорогой. <code>skip</code> для дальних страниц читает и выбрасывает пропущенные документы. Следующую страницу надёжнее начинать с последнего увиденного <code>_id</code>.</p>
+                            <pre><code>db.books.find({ year: { $gte: 2020 } })
+  .sort({ title: 1 })
+  .limit(20)
+
+db.books.find({ _id: { $gt: lastId } })
+  .sort({ _id: 1 })
+  .limit(20)</code></pre>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Справочники. SQL и MongoDB.</p>
+        <a href="#top" class="back-to-top" aria-label="Вернуться в начало">↑</a>
+    </footer>
+
+    <style>
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+    <script>
+        const buttons = document.querySelectorAll("[data-filter]");
+        const sections = document.querySelectorAll("[data-section]");
+        const search = document.querySelector("#search");
+        const empty = document.querySelector("#empty");
+        let current = "all";
+
+        function applyFilter() {
+            const query = search.value.trim().toLowerCase();
+            let visibleCards = 0;
+
+            sections.forEach((section) => {
+                const matchesTab = current === "all" || current === section.dataset.section;
+                let sectionHasCard = false;
+
+                section.querySelectorAll("[data-topic]").forEach((card) => {
+                    const matchesQuery = query === "" || card.textContent.toLowerCase().includes(query);
+                    const show = matchesTab && matchesQuery;
+                    card.hidden = !show;
+                    if (show) {
+                        sectionHasCard = true;
+                        visibleCards += 1;
+                    }
+                });
+
+                section.hidden = !sectionHasCard;
+            });
+
+            empty.classList.toggle("visible", visibleCards === 0);
+        }
+
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => {
+                current = button.dataset.filter;
+                buttons.forEach((item) => {
+                    item.setAttribute("aria-pressed", String(item === button));
+                });
+                applyFilter();
+            });
+        });
+
+        search.addEventListener("input", applyFilter);
+    </script>
+</body>
+
+</html>

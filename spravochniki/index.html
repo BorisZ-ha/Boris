@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочники</title>
+    <meta name="description" content="Шпаргалки по TypeScript, React, Python, SQL и MongoDB: синтаксис и когда какой приём применять.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/catalog.css">
+</head>
+
+<body id="top">
+    <header class="navbar">
+        <nav aria-label="Основная навигация">
+            <a class="logo" href="./index.html">СПРАВОЧНИКИ</a>
+            <ul class="nav-links">
+                <li><a href="./index.html" aria-current="page">Все</a></li>
+                <li><a href="./typescript-react-python/index.html">TypeScript, React, Python</a></li>
+                <li><a href="./sql-mongodb/index.html">SQL и MongoDB</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Справочники</h1>
+            <p>Короткие примеры синтаксиса и правило, когда какой приём уместен. У каждой шпаргалки есть страница с поиском и PDF.</p>
+        </section>
+
+        <section class="container">
+            <div class="catalog-grid">
+                <article class="project-card">
+                    <div class="content">
+                        <h3>TypeScript, React, Python</h3>
+                        <p>Типы и union, состояние и эффекты в React, коллекции и файлы в Python.</p>
+                        <ul class="tech-tags">
+                            <li>TypeScript 5</li>
+                            <li>React 18</li>
+                            <li>Python 3.10+</li>
+                        </ul>
+                        <div class="links">
+                            <a class="btn" href="./typescript-react-python/index.html">Открыть</a>
+                            <a class="btn secondary" href="./typescript-react-python/cheatsheet.pdf" download>Скачать PDF</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <div class="content">
+                        <h3>SQL и MongoDB</h3>
+                        <p>Выборка, связи, изменения и индексы. Рядом — когда хватает таблицы, а когда документа.</p>
+                        <ul class="tech-tags">
+                            <li>PostgreSQL</li>
+                            <li>MongoDB</li>
+                            <li>mongosh</li>
+                        </ul>
+                        <div class="links">
+                            <a class="btn" href="./sql-mongodb/index.html">Открыть</a>
+                            <a class="btn secondary" href="./sql-mongodb/cheatsheet.pdf" download>Скачать PDF</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>
