@@ -35,6 +35,16 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Local DB / samples (большие XML прайсов не коммитим)
+*.db
+*.sqlite
+*.sqlite3
+data/samples/*
+!data/samples/README.md
+*.xml.gz
+PriceFull*.xml
+PromoFull*.xml
+
 # Logs
 *.log
 npm-debug.log*
