@@ -11,10 +11,12 @@
 | Путь | Зачем |
 |------|--------|
 | `frontend/` | Интерфейс на **React + TypeScript** (сборщик **Vite**) |
-| `backend/` | API на **Python FastAPI** |
+| `backend/` | API на **Python FastAPI** + модели данных |
 | `docs/architecture.md` | Как устроены слои приложения (кратко) |
+| `docs/data-models-lesson.md` | **Урок: модели** — SQL vs Mongo, ItemCode, ER |
+| `docker-compose.sketch.yml` | Опциональный набросок Postgres + Mongo (не обязателен) |
 | `index.html`, `style.css`, `pictures/` | Твоё **портфолио** (старый статический сайт) — мы его не трогаем |
-| `.gitignore` | Список файлов, которые Git не коммитит (venv, node_modules и т.д.) |
+| `.gitignore` | Не коммитим venv, node_modules, `data/samples/` (большие XML) |
 
 **Почему две папки frontend и backend?**  
 Фронт — то, что видит пользователь в браузере. Бэк — сервер, который отдаёт данные по HTTP. Так делают почти все современные веб-приложения; на собеседовании это звучит как «разделение клиента и API».
@@ -33,7 +35,8 @@
 | **Браузер** | Смотрим страницу и проверяем API |
 | **PyCharm** | *Не обязателен* здесь; можно оставить для отдельных Python-задач курса |
 
-Базы **PostgreSQL** и **MongoDB** понадобятся позже. Для каркаса они **не нужны**.
+Базы **PostgreSQL** и **MongoDB** описаны моделями в коде; живые серверы
+для урока моделей **не нужны** (см. раздел ниже).
 
 ---
 
@@ -185,11 +188,37 @@ npm run dev
 
 ---
 
-## Что дальше (не в этом шаге)
+## Урок: модели (SQL + Mongo)
 
-- Скачать и разобрать один официальный XML-прайс сети
-- Модели данных + PostgreSQL / MongoDB
+После разбора XML прайса мы зафиксировали **таблицы Postgres** и **форму документа Mongo**.
+Подробный разбор по-русски: [`docs/data-models-lesson.md`](docs/data-models-lesson.md).
+
+Команды (в терминале VS Code, из корня репозитория):
+
+```bash
+cd backend
+python3 -m venv .venv          # если ещё не создавал
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Открой:
+
+- http://127.0.0.1:8000/meta/models — какие таблицы и Mongo-документ задуманы
+- http://127.0.0.1:8000/docs — Swagger UI
+- http://127.0.0.1:8000/products — пока пустой список `[]` (импортёра ещё нет)
+
+Код моделей: `backend/app/models.py`, сырой прайс: `backend/app/mongo_schema.py`.
+
+Локальные большие XML клади в `data/samples/` — папка в `.gitignore`, в Git не улетит.
+
+---
+
+## Что дальше
+
 - API сравнения корзины и нормальный UI на русском
+- Импорт прайса в Mongo → нормализация в Postgres
 - Позже — Docker, когда дойдёте на курсе
 
 Подробнее про слои: [`docs/architecture.md`](docs/architecture.md).

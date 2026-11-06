@@ -1,0 +1,29 @@
+# Набросок (НЕ обязателен для урока моделей).
+# Когда будешь готов поднять базы локально:
+#   docker compose -f docker-compose.sketch.yml up -d
+# Потом DATABASE_URL и MONGODB_URL в .env.
+#
+# Имя файла .sketch.yml — чтобы случайно не принять это за «обязательный» прод-compose.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shopping
+      POSTGRES_PASSWORD: shopping
+      POSTGRES_DB: shopping_cart
+    ports:
+      - "5432:5432"
+    # volumes:  # раскомментируй, если нужны данные между перезапусками
+    #   - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    # volumes:
+    #   - mongodata:/data/db
+
+# volumes:
+#   pgdata:
+#   mongodata:
