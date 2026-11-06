@@ -187,6 +187,26 @@ nav {
     box-shadow: 0 10px 20px rgba(79, 70, 229, 0.5);
 }
 
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+}
+
+.hero-btn-ghost {
+    background-image: none;
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: none;
+}
+
+.hero-btn-ghost:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    background-image: none;
+}
+
 #about {
     padding-bottom: 50px;
 }
